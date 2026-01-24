@@ -107,8 +107,12 @@ foreach ($entries as $entry) {
     echo "Date: ".trim($date)."\n";
     $msg = html_entity_decode($message, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     foreach ($urls as $url) {
+        $censored_url = preg_replace('#^https?://#', '', $url); // remove protocol
+        $censored_url = str_replace('.', '[dot]', $censored_url);
         if (isset($summary_cache[$url])) {
-            $msg = str_replace($url, $summary_cache[$url], $msg);
+            $msg = str_replace($url, $summary_cache[$url] . " [" . $censored_url . "]", $msg);
+        } else {
+            $msg = str_replace($url, "[" . $censored_url . "]", $msg);
         }
     }
     $msg = preg_replace('/<br\s*\/?\s*>/i', "\n", $msg);
