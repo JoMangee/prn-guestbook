@@ -21,10 +21,19 @@ if (isset($_COOKIE['timotheus_guestbook']) && isset($_GET['p']) && $_GET['p'] ==
                 list($name, $email, $location, $date, $ip, $message) = preg_split("/,(?! )/", $entry);
                 $message = trim($message, "\"\x00..\x1F");
                 $location = trim($location, "\"\x00..\x1F");
+                // Decode HTML entities and convert <br> to newlines
+                $message = html_entity_decode($message, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                $message = preg_replace('/<br\s*\/?\s*>/i', "\n", $message);
+                // Remove any remaining HTML tags
+                $message = strip_tags($message);
+                // Convert to ASCII (replace non-ASCII with ?)
+                $message = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $message);
+                $location = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $location);
+                $name = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $name);
                 echo "Name: ".trim($name)."\n";
                 if (!empty($location)) echo "Location: ".trim($location)."\n";
                 echo "Date: ".trim($date)."\n";
-                echo wordwrap(trim(stripslashes($message)), 78)."\n";
+                echo wordwrap(trim($message), 78)."\n";
                 echo str_repeat("-", 60)."\n";
             }
         } else {
