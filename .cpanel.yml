@@ -2,4 +2,8 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home2/timmy/public_html/guestbook
-    - /bin/cp -R * $DEPLOYPATH
+    - /bin/mkdir -p $DEPLOYPATH
+    - /bin/cp -R *.php $DEPLOYPATH
+    - /bin/cp -R *.css $DEPLOYPATH
+    - /bin/cp -R *.txt $DEPLOYPATH
+    - /bin/cp -R smilies $DEPLOYPATH 2>/dev/null || true
