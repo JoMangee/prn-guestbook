@@ -10,9 +10,9 @@
 
 require_once('config.php');
 
-if (isset($_COOKIE['bellabook'])) {
+if (isset($_COOKIE['timotheus_guestbook'])) {
 	// Security: Use SHA256 instead of MD5
-	if ($_COOKIE['bellabook'] == hash('sha256', $admin_pass.$secret.session_id())) {
+	if ($_COOKIE['timotheus_guestbook'] == hash('sha256', $admin_pass.$secret.session_id())) {
 		if (isset($_GET['p'])) $page = $_GET['p'];
 		else $page = NULL;
 		
@@ -313,11 +313,11 @@ if (isset($_GET['p']) && $_GET['p'] == "login") {
 	} else if ($_POST['name'] == $admin_name && $_POST['pass'] == $admin_pass) {
 		// Security: Start session and use SHA256 with secure cookie flags
 		if (session_status() == PHP_SESSION_NONE) session_start();
-		setcookie('bellabook', hash('sha256', $_POST['pass'].$secret.session_id()), time()+(31*86400), '/', '', isset($_SERVER['HTTPS']), true);
+		setcookie('timotheus_guestbook', hash('sha256', $_POST['pass'].$secret.session_id()), time()+(31*86400), '/', '', isset($_SERVER['HTTPS']), true);
 		header("Location: admin.php");
 		exit;
 	} else {
-		setcookie('bellabook', '', time()-3600, '/', '', isset($_SERVER['HTTPS']), true);
+		setcookie('timotheus_guestbook', '', time()-3600, '/', '', isset($_SERVER['HTTPS']), true);
 		header("Location: admin.php");
 		exit;
 	}
