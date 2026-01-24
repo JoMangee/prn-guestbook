@@ -1,7 +1,7 @@
 <?php
 // Summarise links in guestbook entries for offline/print use
 // Usage: Run this script from the command line or browser (admin only)
-// Summaries are cached in websites.txt as URL|summary
+// Summaries are cached in websites.txt as real_url|censored_url|summary: summary
 
 require_once('config.php');
 
@@ -41,9 +41,12 @@ function fetch_summary($url) {
 $summary_cache = [];
 if (file_exists(WEBSITES)) {
     foreach (file(WEBSITES) as $line) {
-        $parts = explode('|', $line, 2);
-        if (count($parts) == 2) {
-            $summary_cache[trim($parts[0])] = trim($parts[1]);
+        $parts = explode('|', $line, 3);
+        if (count($parts) == 3) {
+            $summary_cache[trim($parts[0])] = [
+                'censored' => trim($parts[1]),
+                'summary' => trim($parts[2])
+            ];
         }
     }
 }
@@ -71,15 +74,20 @@ foreach ($entries as $entry) {
 $new_summaries = false;
 foreach (array_keys($all_urls) as $url) {
     if (!isset($summary_cache[$url])) {
+        $censored_url = preg_replace('#^https?://#', '', $url);
+        $censored_url = str_replace('.', '[dot]', $censored_url);
         $summary = fetch_summary($url);
-        $summary_cache[$url] = $summary;
+        $summary_cache[$url] = [
+            'censored' => $censored_url,
+            'summary' => 'summary: ' . $summary
+        ];
         $new_summaries = true;
     }
 }
 if ($new_summaries) {
     $fh = fopen(WEBSITES, 'w');
-    foreach ($summary_cache as $url => $summary) {
-        fwrite($fh, $url . '|' . str_replace(["\r", "\n"], ' ', $summary) . "\n");
+    foreach ($summary_cache as $url => $data) {
+        fwrite($fh, $url . '|' . $data['censored'] . '|' . str_replace(["\r", "\n"], ' ', $data['summary']) . "\n");
     }
     fclose($fh);
 }
@@ -98,7 +106,11 @@ foreach ($entries as $entry) {
         $loc_out = $location;
         foreach ($urls as $url) {
             if (strpos($location, $url) !== false && isset($summary_cache[$url])) {
-                $loc_out = str_replace($url, $summary_cache[$url], $loc_out);
+                $loc_out = str_replace($url, "[" . $summary_cache[$url]['censored'] . "] " . $summary_cache[$url]['summary'], $loc_out);
+            } elseif (strpos($location, $url) !== false) {
+                $censored_url = preg_replace('#^https?://#', '', $url);
+                $censored_url = str_replace('.', '[dot]', $censored_url);
+                $loc_out = str_replace($url, "[" . $censored_url . "]", $loc_out);
             }
         }
         $loc_out = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $loc_out);
@@ -107,11 +119,11 @@ foreach ($entries as $entry) {
     echo "Date: ".trim($date)."\n";
     $msg = html_entity_decode($message, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     foreach ($urls as $url) {
-        $censored_url = preg_replace('#^https?://#', '', $url); // remove protocol
-        $censored_url = str_replace('.', '[dot]', $censored_url);
         if (isset($summary_cache[$url])) {
-            $msg = str_replace($url, $summary_cache[$url] . " [" . $censored_url . "]", $msg);
+            $msg = str_replace($url, $summary_cache[$url]['summary'] . " [" . $summary_cache[$url]['censored'] . "]", $msg);
         } else {
+            $censored_url = preg_replace('#^https?://#', '', $url);
+            $censored_url = str_replace('.', '[dot]', $censored_url);
             $msg = str_replace($url, "[" . $censored_url . "]", $msg);
         }
     }

@@ -318,9 +318,23 @@ if (isset($_COOKIE['timotheus_guestbook'])) {
 			<?php if (!empty($enable_email_report)) { ?>
 				<li><a href="admin.php?p=emailreport" target="_blank">Generate Plain Text Report for Email</a></li>
 			<?php } ?>
+			<li><a href="admin.php?p=deletecache" onclick="return confirm('Are you sure you want to delete the websites.txt cache? This cannot be undone.');">Delete Link Summary Cache (websites.txt)</a></li>
 			</ul>
 <?php
 		break;
+		case "deletecache":
+			$cachefile = __DIR__ . '/websites.txt';
+			if (file_exists($cachefile)) {
+				if (@unlink($cachefile)) {
+					echo '<p>websites.txt cache deleted.</p>';
+				} else {
+					echo '<p>Could not delete websites.txt. Check file permissions.</p>';
+				}
+			} else {
+				echo '<p>websites.txt cache does not exist.</p>';
+			}
+			echo '<p><a href="admin.php">Return to admin dashboard</a></p>';
+			break;
 		}
 		doAdminFooter();
 		exit;
@@ -368,4 +382,3 @@ doAdminHeader();
     </form>
 <?php
 doAdminFooter();
-?>
