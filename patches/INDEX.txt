@@ -1,8 +1,6 @@
 BellaBook Security Patches - Package Index
 ============================================
 
-Location: c:\Data\web\BellaBook\
-
 📋 START HERE:
   └─ PATCH-PACKAGE-SUMMARY.txt       Quick overview of what's included
 
