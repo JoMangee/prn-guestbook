@@ -146,10 +146,15 @@ if (isset($_POST['submit']) || $_SERVER['REQUEST_METHOD'] == "POST") {
 
 		// let's make the data look nice and pretty
 		$c['name'] = ucwords(strtolower($c['name']));
-		$c['email'] = strtolower($c['email']);
-		$c['location'] = isset($c['location']) ? str_replace(",", " ", trim($c['location'])) : '';
-		$c['comments'] = strip_links_to_text(str_replace("<br /><br /><br /><br />", "<br /><br />", preg_replace("/,(?! )/", ", ", preg_replace("([\r\n])", "<br />", $c['comments']))));
-		$c['comments'] = str_replace("\"","'", $c['comments']); // double quotes trip things up - replace with single
+        $c['email'] = strtolower($c['email']);
+        $c['location'] = isset($c['location']) ? str_replace(",", " ", trim($c['location'])) : '';
+        // Normalize line breaks to \n, strip HTML tags, and escape double quotes
+        $c['comments'] = str_replace(["\r\n", "\r"], "\n", $c['comments']);
+        $c['comments'] = strip_tags($c['comments']);
+        $c['comments'] = str_replace('"', "'", $c['comments']);
+        // Remove conversion to <br /> for storage
+        // Store as-is in entries.txt
+        $c['comments'] = strip_links_to_text(str_replace("<br /><br /><br /><br />", "<br /><br />", preg_replace("/,(?! )/", ", ", preg_replace("([\r\n])", "<br />", $c['comments']))));
 		
 		$signdate = date("Y-m-d H:i:s");
 
