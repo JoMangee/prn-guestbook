@@ -5,6 +5,7 @@ deployment:
     - /bin/mkdir -p $DEPLOYPATH
     - /bin/cp -R *.php $DEPLOYPATH
     - /bin/cp -R *.css $DEPLOYPATH
-    - /bin/cp -R *.txt $DEPLOYPATH
+    # Only copy .txt files if they do not already exist on the server
+    - for f in *.txt; do if [ ! -f "$DEPLOYPATH/$f" ]; then /bin/cp "$f" "$DEPLOYPATH"; fi; done
     - /bin/cp prefs.local.php.example $DEPLOYPATH
     - /bin/cp -R smilies $DEPLOYPATH 2>/dev/null || true
