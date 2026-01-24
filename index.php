@@ -89,8 +89,13 @@ if(!fopen(ENTRIES, "r")) {
 					<img src="date.gif" alt="" /> <span class="bold">Date:</span> <?php echo htmlspecialchars($date, ENT_QUOTES, 'UTF-8'); ?><br />
 				</td>
 				<td>
-					<?php echo emoticonise(linebreaker(htmlspecialchars($message, ENT_QUOTES, 'UTF-8'))); ?>
-				</td>
+                    <?php 
+                    // Convert \n to <br /> for HTML display after escaping
+                    $safe_message = htmlspecialchars($message, ENT_QUOTES, 'UTF-8');
+                    $safe_message = str_replace("\n", "<br />", $safe_message);
+                    echo emoticonise(linebreaker($safe_message)); 
+                    ?>
+                </td>
 			</tr>
 <?php
 			$i++;
