@@ -1,0 +1,5 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home2/timmy/public_html/guestbook
+    - /bin/cp -R * $DEPLOYPATH
