@@ -6,4 +6,5 @@ deployment:
     - /bin/cp -R *.php $DEPLOYPATH
     - /bin/cp -R *.css $DEPLOYPATH
     - /bin/cp -R *.txt $DEPLOYPATH
+    - /bin/cp prefs.local.php.example $DEPLOYPATH
     - /bin/cp -R smilies $DEPLOYPATH 2>/dev/null || true
