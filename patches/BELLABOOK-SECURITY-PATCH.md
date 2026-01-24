@@ -136,3 +136,9 @@ After applying the patch, verify:
 - The cookie name `'bellabook'` is intentionally kept for backwards compatibility
 - Existing admin sessions will be invalidated after this patch (users will need to log in again)
 - No data migration required
+## Issue 4: PHP 7+ Compatibility - Deprecated ereg Function (High)
+
+**Problem:** The ereg() function was deprecated in PHP 5.3.0 and removed in PHP 7.0.0.
+**Fix:** Already uses preg_match() instead of deprecated ereg()
+**Fixes:** GitHub Issue #1 - https://github.com/jemjabella/BellaBook/issues/1
+**Impact:** Full PHP 7.x and 8.x compatibility
