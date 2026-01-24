@@ -1,7 +1,9 @@
 entries.txt
+tempentries.txt
 prefs.local.php
 .DS_Store
 Thumbs.db
 *.swp
 *.swo
 *.log
+# iplist.txt and spamwords.txt are version controlled
