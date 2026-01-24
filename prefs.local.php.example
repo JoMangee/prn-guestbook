@@ -1,0 +1,9 @@
+<?php
+// Copy this file to prefs.local.php and edit for your server.
+// This file should NOT be committed to version control.
+
+// Example sensitive config:
+$admin_email = 'your@email.com';
+$admin_pass = 'your_admin_password';
+$secret = 'your_secret_key';
+// ...any other sensitive overrides...

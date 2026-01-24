@@ -1,5 +1,5 @@
 <?php
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------- 
 // BellaBook Copyright © Jem Turner 2004-2007,2008 unless otherwise noted
 // http://www.jemjabella.co.uk/
 //
@@ -9,6 +9,30 @@
 //-----------------------------------------------------------------------------
 
 require_once('config.php');
+
+// Plain text report handler (must be before main admin logic)
+if (isset($_COOKIE['timotheus_guestbook']) && isset($_GET['p']) && $_GET['p'] == 'emailreport' && !empty($enable_email_report)) {
+    if ($_COOKIE['timotheus_guestbook'] == hash('sha256', $admin_pass.$secret)) {
+        header('Content-Type: text/plain; charset=utf-8');
+        echo "Messages for Timotheus\n\n";
+        if (file_exists(ENTRIES)) {
+            $entries = file(ENTRIES);
+            foreach ($entries as $entry) {
+                list($name, $email, $location, $date, $ip, $message) = preg_split("/,(?! )/", $entry);
+                $message = trim($message, "\"\x00..\x1F");
+                $location = trim($location, "\"\x00..\x1F");
+                echo "Name: ".trim($name)."\n";
+                if (!empty($location)) echo "Location: ".trim($location)."\n";
+                echo "Date: ".trim($date)."\n";
+                echo wordwrap(trim(stripslashes($message)), 78)."\n";
+                echo str_repeat("-", 60)."\n";
+            }
+        } else {
+            echo "No messages found.";
+        }
+        exit;
+    }
+}
 
 if (isset($_COOKIE['timotheus_guestbook'])) {
 	// Security: Use SHA256 instead of MD5
@@ -174,7 +198,6 @@ if (isset($_COOKIE['timotheus_guestbook'])) {
 				<input type="text" name="date" id="date" value="<?php echo $odate; ?>" /> <label for="date">Date/Time</label> <small>(yyyy-mm-dd)</small><br>
 				<input type="text" name="ip" id="ip" value="<?php echo $ip; ?>" readonly="readonly" /> <label for="ip">IP Address</label><br>
 				<textarea name="comments" id="comments"><?php echo $message; ?></textarea> <br>
-				
 				<input type="submit" id="submit" value="continue" />
 			</p>
 			</form>
@@ -205,7 +228,7 @@ if (isset($_COOKIE['timotheus_guestbook'])) {
 					$badwords = array();
 					
 					foreach ($_POST['spamwd'] as $spamword)
-						if (ereg("^[A-Za-z0-9]*$", $spamword))
+						if (preg_match('/^[A-Za-z0-9]*$/', $spamword))
 							$badwords[] = $spamword;
 					
 					$new = implode("\r\n", $badwords);
@@ -273,7 +296,7 @@ if (isset($_COOKIE['timotheus_guestbook'])) {
 		break;
 		default:
 ?>
-			<ul>
+			<ul></ul></ul>
 			<li><a href="admin.php?p=manageentries&amp;file=entries.txt">Manage Approved Entries</a> (<?php echo countcontents(ENTRIES); ?>)</li>
 			<?php if ($moderate == "yes") { ?>
 				<li><a href="admin.php?p=manageentries&amp;file=tempentries.txt">Manage Pending Entries</a> (<?php echo countcontents(TEMPENTRIES); ?>)</li>
@@ -283,6 +306,9 @@ if (isset($_COOKIE['timotheus_guestbook'])) {
 			<ul>
 			<li><a href="admin.php?p=editbadwords">Manage Spam Words</a></li>
 			<li><a href="admin.php?p=editips">Manage Blocked IPs</a></li>
+			<?php if (!empty($enable_email_report)) { ?>
+				<li><a href="admin.php?p=emailreport" target="_blank">Generate Plain Text Report for Email</a></li>
+			<?php } ?>
 			</ul>
 <?php
 		break;
@@ -300,13 +326,13 @@ if (isset($_GET['p']) && $_GET['p'] == "login") {
 ?>
 			<p>Sorry, that username and password combination is not valid. Try again.</p>
 
-		    <form method="post" action="admin.php">
-		    Username:<br>
-		    <input type="text" name="name"><br>
-		    Password:<br>
-		    <input type="password" name="pass"><br>
-		    <input type="submit" name="submit" value="Login">
-		    </form>
+	    <form method="post" action="admin.php">
+	    Username:<br>
+	    <input type="text" name="name"><br>
+	    Password:<br>
+	    <input type="password" name="pass"><br>
+	    <input type="submit" name="submit" value="Login">
+	    </form>
 <?php
 		doAdminFooter();
 		exit;
