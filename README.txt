@@ -40,7 +40,6 @@ That's it, you're ready to go!
 Changes for implementation - JB 2019-12-15
 - Changed mentions of guestbook and enteries to open letter and signatures
 - Added protectsuz Stylesheet
-- Integrated styles and structure for https://protectsuzie.com/openletter
 
 New features/fixes in version 3.8
 
