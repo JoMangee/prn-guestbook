@@ -9,3 +9,5 @@ deployment:
     - for f in *.txt; do if [ ! -f "$DEPLOYPATH/$f" ]; then /bin/cp "$f" "$DEPLOYPATH"; fi; done
     - /bin/cp prefs.local.php.example $DEPLOYPATH
     - /bin/cp -R smilies $DEPLOYPATH 2>/dev/null || true
+    # Set permissions on entries.txt to 640 (rw-r-----) to protect sensitive data
+    - if [ -f "$DEPLOYPATH/entries.txt" ]; then /bin/chmod 640 "$DEPLOYPATH/entries.txt"; fi
