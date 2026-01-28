@@ -101,8 +101,8 @@ if(!fopen(ENTRIES, "r")) {
 				</td>
 				<td>
                     <?php 
-					// Convert all literal \n (backslash+n) to <br /> for display
-					echo emoticonise(linebreaker(display_with_newlines($message)));
+					// Convert all literal \n (backslash+n) to <br /> for display (call last)
+					echo display_with_newlines(emoticonise(linebreaker($message)));
                     ?>
                 </td>
 			</tr>
