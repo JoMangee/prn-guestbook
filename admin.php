@@ -2,6 +2,8 @@
 //----------------------------------------------------------------------------- 
 // BellaBook Copyright © Jem Turner 2004-2007,2008 unless otherwise noted
 // http://www.jemjabella.co.uk/
+// THIS FILE HAS BEEN MODIFIED FROM THE ORIGINAL VERSION TO ALLOW FOR 
+// ADDITIONAL FEATURES
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License. See README.txt
@@ -57,10 +59,7 @@ if (isset($_COOKIE['timotheus_guestbook']) && isset($_GET['p']) && $_GET['p'] ==
                 $message = preg_replace('/<br\s*\/?\s*>/i', "\n", $message);
                 // Remove any remaining HTML tags
                 $message = strip_tags($message);
-                // Convert to ASCII (replace non-ASCII with ?)
-                $message = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $message);
-                $location = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $location);
-                $name = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $name);
+				// Output as UTF-8 to preserve emoji and all Unicode characters
                 echo "Name: ".trim($name)."\n";
                 if (!empty($location)) echo "Location: ".trim($location)."\n";
                 echo "Date: ".trim($date)."\n";
