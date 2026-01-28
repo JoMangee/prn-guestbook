@@ -70,7 +70,7 @@ if(!fopen(ENTRIES, "r")) {
 			list($name,$email,$location,$odate,$ip,$message) = preg_split("/,(?! )/",$entries[$i]);
 			
 			$date = date($dateformat, strtotime($odate));
-			$message = trim(stripslashes($message), "\"\x00..\x1F");
+			$message = trim($message, "\"\x00..\x1F");
 			$location = trim(stripslashes($location), "\"\x00..\x1F");
 			
 			// Security: Escape output to prevent XSS
@@ -101,6 +101,8 @@ if(!fopen(ENTRIES, "r")) {
 				</td>
 				<td>
                     <?php 
+					// DEBUG: Show raw $message value before any processing
+					echo '<pre style="color:red;">RAW: ' . htmlspecialchars($message) . '</pre>';
 					// Convert all literal \n (backslash+n) to <br /> for display (call last)
 					echo display_with_newlines(emoticonise(linebreaker($message)));
                     ?>

@@ -140,8 +140,8 @@ if (isset($_COOKIE['timotheus_guestbook'])) {
 					list($name,$email,$location,$date,$ip,$message) = preg_split("/,(?! )/", $entries[$i]);
 				
 					$email = fixEmail($email);
-					$message = trim(stripslashes($message), "\"\x00..\x1F");
-					$location = trim(stripslashes($location), "\"\x00..\x1F");
+					$message = trim($message, "\"\x00..\x1F");
+					$location = trim($location, "\"\x00..\x1F");
 					// Convert all literal \n (backslash+n) to <br /> for display (call last)
 					$message_display = display_with_newlines(emoticonise(linebreaker($message)));
 ?>
