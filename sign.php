@@ -158,6 +158,8 @@ if (isset($_POST['submit']) || $_SERVER['REQUEST_METHOD'] == "POST") {
 		$c['comments'] = preg_replace("/\\n{3,}/", "\\n\\n", $c['comments']);
 		// Remove conversion to <br /> for storage, store as-is in entries.txt
 		$c['comments'] = strip_links_to_text($c['comments']);
+		// Encode all real newlines as literal \n (backslash+n) for file storage
+		$c['comments'] = str_replace("\n", "\\n", $c['comments']);
 		
 		$signdate = date("Y-m-d H:i:s");
 
