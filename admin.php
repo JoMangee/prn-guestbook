@@ -1,3 +1,15 @@
+		case "downloadwebsites":
+			// Secure download of websites.txt for authenticated admins only
+			$websites_file = __DIR__ . '/websites.txt';
+			if (file_exists($websites_file)) {
+				header('Content-Type: text/plain; charset=utf-8');
+				header('Content-Disposition: attachment; filename="websites.txt"');
+				readfile($websites_file);
+			} else {
+				header('HTTP/1.1 404 Not Found');
+				echo 'websites.txt not found.';
+			}
+			exit;
 <?php
 // Utility: Convert all literal \n (backslash+n) to <br /> for display
 if (!function_exists('display_with_newlines')) {
@@ -118,7 +130,7 @@ if (isset($_COOKIE['timotheus_guestbook'])) {
 				}
 				echo '<h2>Website Summary Cache</h2>';
 				echo format_summary_cache_html($websites_cache);
-				echo "<p><a href='websites.txt' target='_blank'>Download raw websites.txt</a></p>";
+				echo "<p><a href='admin.php?p=downloadwebsites'>Download raw websites.txt (admin only)</a></p>";
 			} else {
 				echo '<p>No websites.txt cache found.</p>';
 			}
