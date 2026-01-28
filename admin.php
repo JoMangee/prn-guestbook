@@ -25,64 +25,55 @@ require_once('config.php');
 
 // Plain text report handler (must be before main admin logic)
 if (isset($_COOKIE['timotheus_guestbook']) && isset($_GET['p']) && $_GET['p'] == 'emailreport' && !empty($enable_email_report)) {
-    if ($_COOKIE['timotheus_guestbook'] == hash('sha256', $admin_pass.$secret)) {
-        header('Content-Type: text/plain; charset=utf-8');
-        echo "Messages for Timotheus\n\n";
-        if (file_exists(ENTRIES)) {
-            // Load websites.txt cache for censored URLs and summaries
-            $websites_cache = [];
-            $websites_file = __DIR__ . '/websites.txt';
-            if (file_exists($websites_file)) {
-                foreach (file($websites_file) as $line) {
-                    $parts = explode('|', $line, 3);
-                    if (count($parts) == 3) {
-                        $websites_cache[trim($parts[0])] = [
-                            'censored' => trim($parts[1]),
-                            'summary' => trim($parts[2])
-                        ];
-                    }
-                }
-            }
-            $entries = file(ENTRIES);
-            foreach ($entries as $entry) {
-                list($name, $email, $location, $date, $ip, $message) = preg_split("/,(?! )/", $entry);
-                $message = trim($message, "\"\x00..\x1F");
-                $location = trim($location, "\"\x00..\x1F");
-                // Replace URLs in location and message with censored/summary if available
-                $all_urls = [];
-                preg_match_all('/https?:\/\/[\w\.-]+(?:\/[\w\.-]*)*/i', $location, $loc_urls);
-                preg_match_all('/https?:\/\/[\w\.-]+(?:\/[\w\.-]*)*/i', html_entity_decode($message, ENT_QUOTES | ENT_HTML5, 'UTF-8'), $msg_urls);
-                $all_urls = array_unique(array_merge($loc_urls[0], $msg_urls[0]));
-                foreach ($all_urls as $url) {
-                    if (isset($websites_cache[$url])) {
-                        $censored = '[' . $websites_cache[$url]['censored'] . '] ' . $websites_cache[$url]['summary'];
-                        $location = str_replace($url, $censored, $location);
-                        $message = str_replace($url, $websites_cache[$url]['summary'] . ' [' . $websites_cache[$url]['censored'] . ']', $message);
-                    } else {
-                        $censored_url = preg_replace('#^https?://#', '', $url);
-                        $censored_url = str_replace('.', '[dot]', $censored_url);
-                        $location = str_replace($url, '[' . $censored_url . ']', $location);
-                        $message = str_replace($url, '[' . $censored_url . ']', $message);
-                    }
-                }
+	if ($_COOKIE['timotheus_guestbook'] == hash('sha256', $admin_pass.$secret)) {
+		require_once('summarise_links_lib.php');
+		header('Content-Type: text/plain; charset=utf-8');
+		echo "Messages for Timotheus\n\n";
+		if (file_exists(ENTRIES)) {
+			// Update and load websites.txt cache for censored URLs and summaries
+			$websites_cache = update_summary_cache(ENTRIES, __DIR__ . '/websites.txt');
+			$entries = file(ENTRIES);
+			foreach ($entries as $entry) {
+				$fields = preg_split("/,(?! )/", $entry);
+				if (count($fields) < 6) continue;
+				list($name, $email, $location, $date, $ip, $message) = $fields;
+				$message = trim($message, "\"\x00..\x1F");
+				$location = trim($location, "\"\x00..\x1F");
+				// Replace URLs in location and message with censored/summary if available
+				$all_urls = array_unique(array_merge(
+					extract_urls($location),
+					extract_urls(html_entity_decode($message, ENT_QUOTES | ENT_HTML5, 'UTF-8'))
+				));
+				foreach ($all_urls as $url) {
+					if (isset($websites_cache[$url])) {
+						$censored = '[' . $websites_cache[$url]['censored'] . '] ' . $websites_cache[$url]['summary'];
+						$location = str_replace($url, $censored, $location);
+						$message = str_replace($url, $websites_cache[$url]['summary'] . ' [' . $websites_cache[$url]['censored'] . ']', $message);
+					} else {
+						$censored_url = preg_replace('#^https?://#', '', $url);
+						$censored_url = str_replace('.', '[dot]', $censored_url);
+						$location = str_replace($url, '[' . $censored_url . ']', $location);
+						$message = str_replace($url, '[' . $censored_url . ']', $message);
+					}
+				}
 				// Decode HTML entities and convert <br> and \n to newlines
 				$message = html_entity_decode($message, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-				$message = preg_replace('/<br\s*\/?>/i', "\n", $message);
+				$message = preg_replace('/<br\s*\/?\>/i', "\n", $message);
 				$message = str_replace('\\n', "\n", $message);
 				// Remove any remaining HTML tags
 				$message = strip_tags($message);
 				// Output as UTF-8 to preserve emoji and all Unicode characters
-                echo "Name: ".trim($name)."\n";
-                if (!empty($location)) echo "Location: ".trim($location)."\n";
-                echo "Date: ".trim($date)."\n";
-                echo wordwrap(trim($message), 78)."\n";
-                echo str_repeat("-", 60)."\n";
-            }
-        } else {
-            echo "No messages found.";
-        }
-        exit;
-    }
+				echo "Name: ".trim($name)."\n";
+				if (!empty($location)) echo "Location: ".trim($location)."\n";
+				echo "Date: ".trim($date)."\n";
+				echo wordwrap(trim($message), 78)."\n";
+				echo str_repeat("-", 60)."\n";
+			}
+		} else {
+			echo "No messages found.";
+		}
+		exit;
+	}
 }
 
 if (isset($_COOKIE['timotheus_guestbook'])) {
@@ -99,6 +90,29 @@ if (isset($_COOKIE['timotheus_guestbook'])) {
 		
 		doAdminHeader();
 		switch($page) {
+		case "websitescache":
+			require_once('summarise_links_lib.php');
+			$websites_file = __DIR__ . '/websites.txt';
+			if (file_exists($websites_file)) {
+				$websites_cache = [];
+				foreach (file($websites_file) as $line) {
+					$parts = explode('|', $line, 3);
+					if (count($parts) == 3) {
+						$websites_cache[trim($parts[0])] = [
+							'censored' => trim($parts[1]),
+							'summary' => trim($parts[2])
+						];
+					}
+				}
+				echo '<h2>Website Summary Cache</h2>';
+				echo format_summary_cache_html($websites_cache);
+				echo "<p><a href='websites.txt' target='_blank'>Download raw websites.txt</a></p>";
+			} else {
+				echo '<p>No websites.txt cache found.</p>';
+			}
+			echo '<p><a href="admin.php">Return to admin dashboard</a></p>';
+			doAdminFooter();
+			exit;
 		case "manageentries":
 			echo "<p style='color: red;'><strong>Note:</strong> Do not try to delete multiple entries at once. Due to the setup of the guestbook this will cause the wrong entries to be deleted!</p> \n\n";
 			if (filesize($_GET['file']) > 0) {
@@ -374,6 +388,7 @@ if (isset($_COOKIE['timotheus_guestbook'])) {
 			<?php if (!empty($enable_email_report)) { ?>
 				<li><a href="admin.php?p=emailreport" target="_blank">Generate Plain Text Report for Email</a></li>
 			<?php } ?>
+			<li><a href="admin.php?p=websitescache">View Website Summary Cache</a></li>
 			<li><a href="admin.php?p=deletecache" onclick="return confirm('Are you sure you want to delete the websites.txt cache? This cannot be undone.');">Delete Link Summary Cache (websites.txt)</a></li>
 			</ul>
 <?php
