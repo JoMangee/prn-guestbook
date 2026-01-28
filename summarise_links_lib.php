@@ -38,10 +38,10 @@ if (!function_exists('fetch_summary')) {
             ]
         ]);
         $html = @file_get_contents($url, false, $context);
-        if (!$html) return '[Could not fetch: ' . $url . ']';
+        if (!$html) return '[Could not fetch]';
         libxml_use_internal_errors(true);
         $doc = new DOMDocument();
-        if (!$doc->loadHTML($html)) return '[Unreadable page: ' . $url . ']';
+        if (!$doc->loadHTML($html)) return '[Unreadable page]';
         $title = $doc->getElementsByTagName('title')->item(0);
         $summary = $title ? $title->nodeValue : '';
         foreach ($doc->getElementsByTagName('meta') as $meta) {
@@ -50,7 +50,7 @@ if (!function_exists('fetch_summary')) {
                 break;
             }
         }
-        return $summary ?: '[No summary found: ' . $url . ']';
+        return $summary ?: '[No summary found]';
     }
 }
 
