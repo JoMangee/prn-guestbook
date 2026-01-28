@@ -3,8 +3,29 @@
 
 if (!function_exists('extract_urls')) {
     function extract_urls($text) {
-        preg_match_all('/https?:\/\/[\w\.-]+(?:\/[\w\.-]*)*/i', $text, $matches);
-        return $matches[0];
+        $urls = [];
+        // Find http(s) links
+        preg_match_all('/https?:\/\/[\w\.-]+(?:\/[\w\.-]*)*/i', $text, $matches1);
+        if (!empty($matches1[0])) {
+            $urls = array_merge($urls, $matches1[0]);
+        }
+        // Find plain dotted domains not part of email addresses
+        // (not preceded by @, and not already in $urls)
+        preg_match_all('/(?<!@)\b([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\b/', $text, $matches2);
+        foreach ($matches2[1] as $domain) {
+            // Skip if already found as a full URL
+            $already = false;
+            foreach ($urls as $u) {
+                if (stripos($u, $domain) !== false) {
+                    $already = true;
+                    break;
+                }
+            }
+            if (!$already) {
+                $urls[] = 'https://' . $domain;
+            }
+        }
+        return array_unique($urls);
     }
 }
 
