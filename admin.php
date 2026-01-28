@@ -57,6 +57,17 @@ if (isset($_COOKIE['timotheus_guestbook']) && isset($_GET['p']) && $_GET['p'] ==
 						$message = str_replace($url, '[' . $censored_url . ']', $message);
 					}
 				}
+				// If location is a plain domain, replace it as well
+				if (preg_match('/^(?<!@)([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$/', $location, $m)) {
+					$domain = $m[1];
+					$url = 'https://' . $domain;
+					$censored_url = str_replace('.', '[dot]', $domain);
+					if (isset($websites_cache[$url])) {
+						$location = '[' . $websites_cache[$url]['censored'] . '] ' . $websites_cache[$url]['summary'];
+					} else {
+						$location = '[' . $censored_url . ']';
+					}
+				}
 				// Decode HTML entities and convert <br> and \n to newlines
 				$message = html_entity_decode($message, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 				$message = preg_replace('/<br\s*\/?\>/i', "\n", $message);
