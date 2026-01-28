@@ -3,8 +3,11 @@
 if (!function_exists('display_with_newlines')) {
 function display_with_newlines($text) {
 	$text = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
-	$text = str_replace('\\n', "\n", $text);
-	return nl2br($text);
+	// Convert literal \n (backslash+n) to <br />
+	$text = str_replace('\\n', '<br />', $text);
+	// Convert any real newlines (legacy) to <br />
+	$text = nl2br($text);
+	return $text;
 }
 }
 //-----------------------------------------------------------------------------
