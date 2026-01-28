@@ -131,6 +131,8 @@ if (isset($_COOKIE['timotheus_guestbook'])) {
 					$email = fixEmail($email);
 					$message = trim(stripslashes($message), "\"\x00..\x1F");
 					$location = trim(stripslashes($location), "\"\x00..\x1F");
+					// Convert literal \n to real newlines, then to <br /> for display
+					$message_display = nl2br(str_replace('\\n', "\n", $message));
 ?>
 					<tr>
 						<td>
@@ -149,7 +151,7 @@ if (isset($_COOKIE['timotheus_guestbook'])) {
 							<?php endif; ?>
 						</td>
 						<td>
-							<?php echo htmlspecialchars($message, ENT_QUOTES, 'UTF-8'); ?>
+							<?php echo $message_display; ?>
 						</td>
 					</tr>
 <?php
