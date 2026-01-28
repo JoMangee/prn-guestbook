@@ -54,11 +54,12 @@ if (isset($_COOKIE['timotheus_guestbook']) && isset($_GET['p']) && $_GET['p'] ==
                         $message = str_replace($url, '[' . $censored_url . ']', $message);
                     }
                 }
-                // Decode HTML entities and convert <br> to newlines
-                $message = html_entity_decode($message, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                $message = preg_replace('/<br\s*\/?\s*>/i', "\n", $message);
-                // Remove any remaining HTML tags
-                $message = strip_tags($message);
+				// Decode HTML entities and convert <br> and \n to newlines
+				$message = html_entity_decode($message, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+				$message = preg_replace('/<br\s*\/?>/i', "\n", $message);
+				$message = str_replace('\\n', "\n", $message);
+				// Remove any remaining HTML tags
+				$message = strip_tags($message);
 				// Output as UTF-8 to preserve emoji and all Unicode characters
                 echo "Name: ".trim($name)."\n";
                 if (!empty($location)) echo "Location: ".trim($location)."\n";

@@ -90,10 +90,10 @@ if(!fopen(ENTRIES, "r")) {
 				</td>
 				<td>
                     <?php 
-                    // Convert \n to <br /> for HTML display after escaping
-                    $safe_message = htmlspecialchars($message, ENT_QUOTES, 'UTF-8');
-                    $safe_message = str_replace("\n", "<br />", $safe_message);
-                    echo emoticonise(linebreaker($safe_message)); 
+					// Convert \n to <br /> for HTML display after escaping
+					$safe_message = htmlspecialchars($message, ENT_QUOTES, 'UTF-8');
+					$safe_message = str_replace("\\n", "<br />", $safe_message);
+					echo emoticonise(linebreaker($safe_message));
                     ?>
                 </td>
 			</tr>
