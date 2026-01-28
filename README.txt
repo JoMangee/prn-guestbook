@@ -29,7 +29,13 @@ feel free to contact me: jem@jemjabella.co.uk
 //--------------------
 1. Customise prefs.php - set your username, password and various preferences
 2. Upload all of the files to a directory, upload the smilies directory if you want emoticons
-3. CHMOD the four txt files (entries.txt, tempentries.txt, spamwords.txt, iplist.txt) to 666
+
+3. Set permissions on all guestbook data files (entries.txt, tempentries.txt, spamwords.txt, iplist.txt, websites.txt) so they are readable and writable by the web server user only (e.g., chmod 640 or 600). Do not make them world-writable or world-readable.
+
+If deploying with cPanel, you can automate this in your .cpanel.yml:
+
+		post_deploy:
+			- chmod 640 entries.txt tempentries.txt spamwords.txt iplist.txt websites.txt
 
 That's it, you're ready to go!
 
@@ -37,9 +43,40 @@ That's it, you're ready to go!
 //--------------------
 // CHANGELOG
 //--------------------
-Changes for implementation - JB 2019-12-15
-- Changed mentions of guestbook and enteries to open letter and signatures
-- Added protectsuz Stylesheet
+
+--------------------
+PROJECT MODERNIZATION & ENHANCEMENTS (2026)
+--------------------
+This project is a heavily modernized and security-enhanced fork of the original BellaBook guestbook by Jem Turner.
+
+Major changes and new features since the original:
+
+- **Security:**
+	- Hardened admin authentication (SHA256, secure cookies, CSRF protection)
+	- Path traversal and input validation throughout
+	- XSS prevention and output escaping
+- **Newline Handling:**
+	- Consistent storage of newlines as literal \n in entry files
+	- Robust display logic: converts \n to <br> for HTML, supports legacy real newlines
+- **Link Summarization:**
+	- Automatic extraction and summarization of all URLs and plain dotted domains (e.g., mesh.net.nz) in entries
+	- Summaries are cached and included in admin email reports, with privacy-compliant error handling
+	- Admin interface to view and manage the website summary cache
+- **Admin & Moderation:**
+	- Improved entry approval, editing, and deletion
+	- Plain text email report for easy collation and review
+	- All admin actions protected by CSRF tokens
+- **Privacy & Compliance:**
+	- No raw or clickable links in email reports; all domains are censored (e.g., [mesh[dot]net[dot]nz])
+	- Error messages in summaries never include actual URLs
+- **Codebase Modernization:**
+	- Refactored for maintainability and extensibility
+	- Shared library for link extraction and summarization
+	- Improved UTF-8 support and emoji handling
+- **UI/UX:**
+	- Modernized admin and public views
+	- Optional debug output for message inspection
+--------------------
 
 New features/fixes in version 3.8
 
