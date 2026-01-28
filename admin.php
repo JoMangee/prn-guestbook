@@ -199,7 +199,15 @@ if (isset($_COOKIE['timotheus_guestbook'])) {
 				foreach ($_POST as $key => $val) {
 					$$key = cleanUp($val);
 				}
-				$comments = str_replace("<br /><br /><br /><br />", "<br /><br />", preg_replace("/,(?! )/", ", ", preg_replace("([\r\n])", "<br />", $comments)));
+				// Normalize all line breaks to \n (backslash+n), remove <br> tags, and strip HTML
+				$comments = str_replace(["\r\n", "\r"], "\n", $comments);
+				$comments = preg_replace('/<br\s*\/?>/i', "\n", $comments);
+				$comments = strip_tags($comments);
+				$comments = str_replace('"', "'", $comments);
+				$comments = preg_replace("/\\n{3,}/", "\\n\\n", $comments);
+				$comments = trim($comments);
+				// Store as literal \n in file
+				$comments = str_replace("\n", "\\n", $comments);
 
 				$editedEntry = $name . "," . breakEmail($email) . "," . $url . "," . $date . "," . $ip . "," . "\"$comments\"" . "\n";
 				
