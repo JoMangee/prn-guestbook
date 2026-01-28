@@ -101,8 +101,10 @@ if(!fopen(ENTRIES, "r")) {
 				</td>
 				<td>
                     <?php 
-					// DEBUG: Show raw $message value before any processing
-					echo '<pre style="color:red;">RAW: ' . htmlspecialchars($message) . '</pre>';
+					// Show raw $message value only if ?debug=true is present
+					if (isset($_GET['debug']) && $_GET['debug'] === 'true') {
+						echo '<pre style="color:red;">RAW: ' . htmlspecialchars($message) . '</pre>';
+					}
 					// Convert all literal \n (backslash+n) to <br /> for display (call last)
 					echo display_with_newlines(emoticonise(linebreaker($message)));
                     ?>

@@ -142,6 +142,10 @@ if (isset($_COOKIE['timotheus_guestbook'])) {
 					$email = fixEmail($email);
 					$message = trim($message, "\"\x00..\x1F");
 					$location = trim($location, "\"\x00..\x1F");
+					// Show raw $message value only if ?debug=true is present
+					if (isset($_GET['debug']) && $_GET['debug'] === 'true') {
+						echo '<pre style="color:red;">RAW: ' . htmlspecialchars($message) . '</pre>';
+					}
 					// Convert all literal \n (backslash+n) to <br /> for display (call last)
 					$message_display = display_with_newlines(emoticonise(linebreaker($message)));
 ?>
