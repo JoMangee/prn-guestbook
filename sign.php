@@ -146,17 +146,16 @@ if (isset($_POST['submit']) || $_SERVER['REQUEST_METHOD'] == "POST") {
 
 		// let's make the data look nice and pretty
 		$c['name'] = ucwords(strtolower($c['name']));
-        $c['email'] = strtolower($c['email']);
-        $c['location'] = isset($c['location']) ? str_replace(",", " ", trim($c['location'])) : '';
-        // Normalize line breaks to \n, strip HTML tags, and escape double quotes
-		// Normalize all line breaks to \n
+		$c['email'] = strtolower($c['email']);
+		$c['location'] = isset($c['location']) ? str_replace(",", " ", trim($c['location'])) : '';
+		// Normalize all line breaks to \n (real newline to literal backslash+n)
 		$c['comments'] = str_replace(["\r\n", "\r"], "\n", $c['comments']);
 		// Remove all <br> and <br /> tags (from pasted/legacy input)
 		$c['comments'] = preg_replace('/<br\s*\/?>/i', "\n", $c['comments']);
 		$c['comments'] = strip_tags($c['comments']);
 		$c['comments'] = str_replace('"', "'", $c['comments']);
-		// Remove any accidental double newlines
-		$c['comments'] = preg_replace("/\n{3,}/", "\n\n", $c['comments']);
+		// Remove any accidental double newlines (literal)
+		$c['comments'] = preg_replace("/\\n{3,}/", "\\n\\n", $c['comments']);
 		// Remove conversion to <br /> for storage, store as-is in entries.txt
 		$c['comments'] = strip_links_to_text($c['comments']);
 		
