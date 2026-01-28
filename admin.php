@@ -1,4 +1,12 @@
 <?php
+// Utility: Convert all literal \n (backslash+n) to <br /> for display
+if (!function_exists('display_with_newlines')) {
+function display_with_newlines($text) {
+	$text = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+	$text = str_replace('\\n', "\n", $text);
+	return nl2br($text);
+}
+}
 //----------------------------------------------------------------------------- 
 // BellaBook Copyright © Jem Turner 2004-2007,2008 unless otherwise noted
 // http://www.jemjabella.co.uk/
@@ -131,9 +139,8 @@ if (isset($_COOKIE['timotheus_guestbook'])) {
 					$email = fixEmail($email);
 					$message = trim(stripslashes($message), "\"\x00..\x1F");
 					$location = trim(stripslashes($location), "\"\x00..\x1F");
-					// Convert all literal \n (backslash+n) to real newlines, then to <br /> for display, and escape HTML
-					$message_display = htmlspecialchars(str_replace('\\n', "\n", $message), ENT_QUOTES, 'UTF-8');
-					$message_display = nl2br($message_display);
+					// Convert all literal \n (backslash+n) to <br /> for display
+					$message_display = display_with_newlines($message);
 ?>
 					<tr>
 						<td>

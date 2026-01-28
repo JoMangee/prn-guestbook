@@ -1,4 +1,12 @@
 <?php
+// Utility: Convert all literal \n (backslash+n) to <br /> for display
+if (!function_exists('display_with_newlines')) {
+function display_with_newlines($text) {
+	$text = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+	$text = str_replace('\\n', "\n", $text);
+	return nl2br($text);
+}
+}
 //-----------------------------------------------------------------------------
 // BellaBook Copyright © Jem Turner 2004-2007,2008 unless otherwise noted
 // http://www.jemjabella.co.uk/
@@ -90,10 +98,8 @@ if(!fopen(ENTRIES, "r")) {
 				</td>
 				<td>
                     <?php 
-					// Convert real newlines to <br /> for HTML display after escaping
-					$safe_message = htmlspecialchars($message, ENT_QUOTES, 'UTF-8');
-					$safe_message = nl2br($safe_message);
-					echo emoticonise(linebreaker($safe_message));
+					// Convert all literal \n (backslash+n) to <br /> for display
+					echo emoticonise(linebreaker(display_with_newlines($message)));
                     ?>
                 </td>
 			</tr>
