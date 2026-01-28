@@ -45,14 +45,15 @@ if (isset($_COOKIE['timotheus_guestbook']) && isset($_GET['p']) && $_GET['p'] ==
 					extract_urls(html_entity_decode($message, ENT_QUOTES | ENT_HTML5, 'UTF-8'))
 				));
 				foreach ($all_urls as $url) {
+					$censored_url = preg_replace('#^https?://#', '', $url);
+					$censored_url = str_replace('.', '[dot]', $censored_url);
 					if (isset($websites_cache[$url])) {
 						$censored = '[' . $websites_cache[$url]['censored'] . '] ' . $websites_cache[$url]['summary'];
-						$location = str_replace($url, $censored, $location);
+						// Replace both the original and censored domain in location
+						$location = str_replace([$url, $censored_url], $censored, $location);
 						$message = str_replace($url, $websites_cache[$url]['summary'] . ' [' . $websites_cache[$url]['censored'] . ']', $message);
 					} else {
-						$censored_url = preg_replace('#^https?://#', '', $url);
-						$censored_url = str_replace('.', '[dot]', $censored_url);
-						$location = str_replace($url, '[' . $censored_url . ']', $location);
+						$location = str_replace([$url, $censored_url], '[' . $censored_url . ']', $location);
 						$message = str_replace($url, '[' . $censored_url . ']', $message);
 					}
 				}
