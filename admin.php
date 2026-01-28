@@ -1,16 +1,4 @@
-		case "downloadwebsites":
-			// Secure download of websites.txt for authenticated admins only
-			$websites_file = __DIR__ . '/websites.txt';
-			if (file_exists($websites_file)) {
-				header('Content-Type: text/plain; charset=utf-8');
-				header('Content-Disposition: attachment; filename="websites.txt"');
-				readfile($websites_file);
-			} else {
-				header('HTTP/1.1 404 Not Found');
-				echo 'websites.txt not found.';
-			}
-			exit;
-<?php
+	<?php
 // Utility: Convert all literal \n (backslash+n) to <br /> for display
 if (!function_exists('display_with_newlines')) {
 function display_with_newlines($text) {
@@ -30,7 +18,7 @@ function display_with_newlines($text) {
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License. See README.txt
-// or LICENSE.txt for more information.
+	// (Removed duplicate misplaced case block)
 //-----------------------------------------------------------------------------
 
 require_once('config.php');
@@ -114,6 +102,18 @@ if (isset($_COOKIE['timotheus_guestbook'])) {
 		
 		doAdminHeader();
 		switch($page) {
+		case "downloadwebsites":
+			// Secure download of websites.txt for authenticated admins only
+			$websites_file = __DIR__ . '/websites.txt';
+			if (file_exists($websites_file)) {
+				header('Content-Type: text/plain; charset=utf-8');
+				header('Content-Disposition: attachment; filename="websites.txt"');
+				readfile($websites_file);
+			} else {
+				header('HTTP/1.1 404 Not Found');
+				echo 'websites.txt not found.';
+			}
+			exit;
 		case "websitescache":
 			require_once('summarise_links_lib.php');
 			$websites_file = __DIR__ . '/websites.txt';
