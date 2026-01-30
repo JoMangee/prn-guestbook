@@ -1,5 +1,7 @@
+# entries.txt and tempentries.txt often contain sensitive PII data
 entries.txt
 tempentries.txt
+#local settings shouldn't be checked in - see pref.local.php.example
 prefs.local.php
 .DS_Store
 Thumbs.db
@@ -7,3 +9,13 @@ Thumbs.db
 *.swo
 *.log
 # iplist.txt and spamwords.txt are version controlled
+#testentries.txt is for testing and contains generated PII data
+testentries.txt
+#websites.txt is generated - but caching in version control is ok 
+websites.txt
+#patches are in another repository/branch and don't need to be here
+patches/admin.php.clean
+patches/admin.php.universal
+patches/apply-security-fixes.ps1
+patches/bellabook-security-clean.patch
+patches/index.php.clean
