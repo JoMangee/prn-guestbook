@@ -22,12 +22,10 @@ echo '<?xml version="1.0" encoding="utf-8"?>'; ?>
 			$i = 0;
 			$limit = (count($blah) > 10) ? 10 : count($blah);
 			while ($i<$limit){
-				list($name,$email,$url,$date,$ip,$message) = preg_split("/,(?! )/",$blah[$i]);
-
-				$date = date("D, d M Y H:i:s T", strtotime($date));
-				$email = fixEmail($email);
-				$message = trim(stripslashes($message), "\"\x00..\x1F");
-		
+				$e       = splitEntry($blah[$i]);
+				$date    = date("D, d M Y H:i:s T", strtotime($e['date']));
+				$email   = $e['email'];
+				$message = $e['message'];
 				echo "<item>\n";
 				echo "<title>guestbook entry</title>\n";
 					echo "<link>$admin_url</link>\n";

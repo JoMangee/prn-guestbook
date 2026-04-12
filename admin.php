@@ -64,11 +64,14 @@ if (isset($_COOKIE['timotheus_guestbook']) && isset($_GET['p']) && $_GET['p'] ==
             $websites_cache = update_summary_cache(ENTRIES, __DIR__ . '/websites.txt');
             $entries = file(ENTRIES);
             foreach ($entries as $entry) {
-                $fields = preg_split("/,(?! )/", $entry);
-                if (count($fields) < 6) continue;
-                list($name, $email, $location, $date, $ip, $message) = $fields;
-                $message = trim($message, "\"\x00..\x1F");
-                $location = trim($location, "\"\x00..\x1F");
+                $e = splitEntry($entry);
+                if ($e['status'] === 'error') continue;
+                $name     = $e['name'];
+                $email    = $e['email'];
+                $location = $e['url'];
+                $date     = $e['date'];
+                $ip       = $e['ip'];
+                $message  = $e['message'];
                 
                 // Process URLs in location and message
                 $location = process_urls_in_text($location, $websites_cache);
@@ -209,11 +212,13 @@ if (isset($_COOKIE['timotheus_guestbook'])) {
                     $csrf_token = hash('sha256', $_SESSION['csrf_token'].$secret);
                     
                     while ($i < $end) {
-                        list($name,$email,$location,$date,$ip,$message) = preg_split("/,(?! )/", $entries[$i]);
-                    
-                        $email = fixEmail($email);
-                        $message = trim($message, "\"\x00..\x1F");
-                        $location = trim($location, "\"\x00..\x1F");
+                        $e        = splitEntry($entries[$i]);
+                        $name     = $e['name'];
+                        $email    = $e['email'];
+                        $location = $e['url'];
+                        $date     = $e['date'];
+                        $ip       = $e['ip'];
+                        $message  = $e['message'];
                         // Show raw $message value only if ?debug=true is present
                         if (isset($_GET['debug']) && $_GET['debug'] === 'true') {
                             echo '<pre style="color:red;">RAW: ' . htmlspecialchars($message) . '</pre>';
@@ -268,7 +273,10 @@ if (isset($_COOKIE['timotheus_guestbook'])) {
                     
                     foreach ($_POST['appr'] as $entry => $id) {
                         if (is_numeric($id) && array_key_exists($id, $pending)) {
-                            $approved[] = $pending[$id];
+                            // Promote status pending -> approved as entry moves to ENTRIES
+                            $e = splitEntry(trim($pending[$id]));
+                            $e['status'] = 'approved';
+                            $approved[] = formatEntry($e) . "\r\n";
                             unset($pending[$id]);
                         }
                     }
@@ -291,14 +299,14 @@ if (isset($_COOKIE['timotheus_guestbook'])) {
                     }
                     
                     // Explicitly extract POST variables for security
-                    $name = cleanUp($_POST['name'] ?? '');
-                    $email = cleanUp($_POST['email'] ?? '');
-                    $url = cleanUp($_POST['url'] ?? '');
-                    $date = cleanUp($_POST['date'] ?? '');
-                    $ip = cleanUp($_POST['ip'] ?? '');
-                    $comments = cleanUp($_POST['comments'] ?? '');
-                    $gbentry = cleanUp($_POST['gbentry'] ?? '');
-                    $file = cleanUp($_POST['file'] ?? '');
+                    $name = cleanStorageInput($_POST['name'] ?? '');
+                    $email = cleanStorageInput($_POST['email'] ?? '');
+                    $url = cleanStorageInput($_POST['url'] ?? '');
+                    $date = cleanStorageInput($_POST['date'] ?? '');
+                    $ip = cleanStorageInput($_POST['ip'] ?? '');
+                    $comments = cleanStorageInput($_POST['comments'] ?? '');
+                    $gbentry = cleanStorageInput($_POST['gbentry'] ?? '');
+                    $file = cleanStorageInput($_POST['file'] ?? '');
                     
                     // Validate critical fields
                     if (empty($name) || empty($gbentry) || empty($file) || !file_exists($file)) {
@@ -316,7 +324,17 @@ if (isset($_COOKIE['timotheus_guestbook'])) {
                     // Store as literal \n in file
                     $comments = str_replace("\n", "\\n", $comments);
 
-                    $editedEntry = $name . "," . breakEmail($email) . "," . $url . "," . $date . "," . $ip . "," . "\"$comments\"" . "\n";
+                    // Preserve status: entries.txt = approved, tempentries.txt = pending
+                    $entry_status = ($file === 'entries.txt') ? 'approved' : 'pending';
+                    $editedEntry = formatEntry([
+                        'name' => $name,
+                        'email' => $email,
+                        'url' => $url,
+                        'date' => $date,
+                        'ip' => $ip,
+                        'message' => $comments,
+                        'status' => $entry_status,
+                    ]) . "\n";
                     
                     $entries = file($file);
                     if (isset($entries[$gbentry])) {
@@ -341,10 +359,13 @@ if (isset($_COOKIE['timotheus_guestbook'])) {
                 }
                 $entries = file($_GET['file']);
 
-                list($name,$email,$url,$odate,$ip,$message) = preg_split("/,(?! )/", $entries[$_GET['entry']]);
-                
-                $email = fixEmail($email);
-                $message = str_replace("<br /><br />", "\r\n\r\n", trim(stripslashes($message), "\"\x00..\x1F"));
+                $e       = splitEntry($entries[$_GET['entry']]);
+                $name    = $e['name'];
+                $email   = $e['email'];
+                $url     = $e['url'];
+                $odate   = $e['date'];
+                $ip      = $e['ip'];
+                $message = str_replace('\\n', "\r\n", $e['message']);
                 
                 // Generate CSRF token for form
                 if (!isset($_SESSION['csrf_token'])) {

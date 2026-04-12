@@ -18,8 +18,20 @@ define("SPAMWDS", "spamwords.txt");
 
 
 function cleanUp($text) {
-	$text = trim(htmlentities(strip_tags(urldecode($text))));
-	return $text;
+	$text = trim(strip_tags((string)$text));
+	return htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+
+function cleanStorageInput($text) {
+	return trim(strip_tags((string)$text));
+}
+
+function encodeEntryField($text) {
+	return rawurlencode((string)$text);
+}
+
+function decodeEntryField($text) {
+	return rawurldecode((string)$text);
 }
 
 // break big words every 50 characters for layout preservation.
@@ -180,6 +192,79 @@ blanklinefix(ENTRIES);
 blanklinefix(TEMPENTRIES);
 blanklinefix(IPBLOCKLST);
 blanklinefix(SPAMWDS);
+
+/**
+ * Parse a guestbook entry line into an associative array.
+ *
+ * Supports both:
+ *   New 7-field pipe format:  name|email|url|date|ip|message|status
+ *   Legacy 6-field CSV format: name,email(obfuscated),location,date,ip,"message"
+ *
+ * Legacy entries default to status 'approved' for backward compatibility.
+ * Detection uses field count + known status values to avoid false positives
+ * from legacy location strings that happen to contain a pipe (e.g. "Mesh|net").
+ */
+function splitEntry(string $entry): array
+{
+	$trimmed = trim($entry);
+	$pipeParts = explode('|', $trimmed);
+	$validStatuses = ['pending', 'approved', 'sent', 'seen'];
+
+	// New pipe format: exactly 7 fields with a recognised status value.
+	// Fields are stored rawurlencoded so pipes, emoji and :// survive round-trips.
+	if (count($pipeParts) === 7 && in_array(trim(decodeEntryField($pipeParts[6])), $validStatuses, true)) {
+		return [
+			'name'    => decodeEntryField($pipeParts[0]),
+			'email'   => decodeEntryField($pipeParts[1]),
+			'url'     => decodeEntryField($pipeParts[2]),
+			'date'    => decodeEntryField($pipeParts[3]),
+			'ip'      => decodeEntryField($pipeParts[4]),
+			'message' => decodeEntryField($pipeParts[5]),
+			'status'  => trim(decodeEntryField($pipeParts[6])),
+		];
+	}
+
+	// Legacy comma format: name,email(obfuscated),location,date,ip,"message"
+	$f = preg_split('/,(?! )/', $trimmed);
+	if (count($f) >= 6) {
+		return [
+			'name'    => $f[0],
+			'email'   => fixEmail($f[1]),
+			'url'     => trim($f[2] ?? '', "\"\x00..\x1F"),
+			'date'    => $f[3] ?? '',
+			'ip'      => $f[4] ?? '',
+			'message' => trim($f[5], "\"\x00..\x1F"),
+			'status'  => 'approved',
+		];
+	}
+
+	// Unrecognised — return a safe stub so callers always get all keys
+	return [
+		'name'    => '',
+		'email'   => '',
+		'url'     => '',
+		'date'    => '',
+		'ip'      => '',
+		'message' => $trimmed,
+		'status'  => 'error',
+	];
+}
+
+/**
+ * Serialise an entry array to the pipe-delimited storage format.
+ */
+function formatEntry(array $entry): string
+{
+	return implode('|', [
+		encodeEntryField($entry['name'] ?? ''),
+		encodeEntryField($entry['email'] ?? ''),
+		encodeEntryField($entry['url'] ?? ''),
+		encodeEntryField($entry['date'] ?? ''),
+		encodeEntryField($entry['ip'] ?? ''),
+		encodeEntryField($entry['message'] ?? ''),
+		encodeEntryField($entry['status'] ?? 'pending'),
+	]);
+}
 
 error_reporting(0);
 ?>

@@ -184,7 +184,16 @@ if (isset($_POST['submit']) || $_SERVER['REQUEST_METHOD'] == "POST") {
 			mail($admin_email,$subject,$message,$headers);
 		}
 
-		$entryformat = $c['name'].",".breakEmail($c['email']).",".$c['location'].",".$signdate.",".$_SERVER['REMOTE_ADDR'].',"'.$c['comments'].'"'."\r\n";
+		$status = ($moderate == "yes") ? 'pending' : 'approved';
+		$entryformat = formatEntry([
+			'name' => $c['name'],
+			'email' => $c['email'],
+			'url' => $c['location'],
+			'date' => $signdate,
+			'ip' => $_SERVER['REMOTE_ADDR'],
+			'message' => $c['comments'],
+			'status' => $status,
+		]) . "\r\n";
 
 		if ($moderate == "yes") sign_gbook(TEMPENTRIES, $entryformat);
 		else sign_gbook(ENTRIES, $entryformat);

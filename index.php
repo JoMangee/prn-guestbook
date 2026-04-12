@@ -67,11 +67,15 @@ if(!fopen(ENTRIES, "r")) {
 		<table id="entries" aria-label="Messages" >
 <?php
 		while ($i<$end){
-			list($name,$email,$location,$odate,$ip,$message) = preg_split("/,(?! )/",$entries[$i]);
-			
+			$e        = splitEntry($entries[$i]);
+			$name     = $e['name'];
+			$email    = $e['email'];  // already decoded from legacy obfuscation if applicable
+			$location = $e['url'];
+			$odate    = $e['date'];
+			$ip       = $e['ip'];
+			$message  = $e['message'];
+
 			$date = date($dateformat, strtotime($odate));
-			$message = trim($message, "\"\x00..\x1F");
-			$location = trim(stripslashes($location), "\"\x00..\x1F");
 			
 			// Security: Escape output to prevent XSS
 			$name = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');

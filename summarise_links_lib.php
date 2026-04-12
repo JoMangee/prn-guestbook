@@ -5,7 +5,7 @@ if (!function_exists('extract_urls')) {
     function extract_urls($text) {
         $urls = [];
         // Find http(s) links
-        preg_match_all('/https?:\/\/[\w\.-]+(?:\/[\w\.-]*)*/i', $text, $matches1);
+        preg_match_all('/https?:\/\/[^\s<>"]+/i', $text, $matches1);
         if (!empty($matches1[0])) {
             $urls = array_merge($urls, $matches1[0]);
         }
@@ -29,22 +29,70 @@ if (!function_exists('extract_urls')) {
     }
 }
 
+if (!function_exists('extract_http_status_code')) {
+    function extract_http_status_code($headers) {
+        if (!is_array($headers)) {
+            return 0;
+        }
+
+        foreach ($headers as $header) {
+            if (preg_match('#^HTTP/\S+\s+(\d{3})#', $header, $matches)) {
+                return (int)$matches[1];
+            }
+        }
+
+        return 0;
+    }
+}
+
 if (!function_exists('fetch_summary')) {
-    function fetch_summary($url) {
+    function fetch_summary($url, &$host_failures = []) {
+        $host = parse_url($url, PHP_URL_HOST);
+        if (empty($host)) {
+            return '[Invalid URL]';
+        }
+
+        if (isset($host_failures[$host])) {
+            return $host_failures[$host];
+        }
+
         $context = stream_context_create([
             'http' => [
-                'timeout' => 5,
-                'user_agent' => 'Mozilla/5.0 (compatible; GuestbookBot/1.0)'
+                'timeout' => 3,
+                'ignore_errors' => true,
+                'follow_location' => 0,
+                'user_agent' => 'BellaBook-LinkSummary/1.0'
             ]
         ]);
+
         $html = @file_get_contents($url, false, $context);
-        if (!$html) return '[Could not fetch]';
+        $status_code = extract_http_status_code($http_response_header ?? []);
+
+        if (in_array($status_code, [401, 403, 429], true)) {
+            $host_failures[$host] = '[Fetch blocked: HTTP ' . $status_code . ']';
+            return $host_failures[$host];
+        }
+
+        if ($html === false) {
+            $host_failures[$host] = '[Could not fetch]';
+            return $host_failures[$host];
+        }
+
+        if ($status_code >= 400) {
+            $host_failures[$host] = '[Fetch failed: HTTP ' . $status_code . ']';
+            return $host_failures[$host];
+        }
+
         libxml_use_internal_errors(true);
         $doc = new DOMDocument();
         if (!$doc->loadHTML($html)) return '[Unreadable page]';
         $title = $doc->getElementsByTagName('title')->item(0);
         $summary = $title ? $title->nodeValue : '';
         foreach ($doc->getElementsByTagName('meta') as $meta) {
+            if (!($meta instanceof DOMElement)) {
+                continue;
+            }
+
             if (strtolower($meta->getAttribute('name')) === 'description') {
                 $summary .= ' - ' . $meta->getAttribute('content');
                 break;
@@ -75,11 +123,10 @@ if (!function_exists('update_summary_cache')) {
         $entries = file($entries_file);
         $all_urls = [];
         foreach ($entries as $entry) {
-            $fields = preg_split("/,(?! )/", $entry);
-            if (count($fields) < 6) continue;
-            list($name, $email, $location, $date, $ip, $message) = $fields;
-            $message = trim($message, "\"\x00..\x1F");
-            $location = trim($location, "\"\x00..\x1F");
+            $e = splitEntry($entry);
+            if ($e['status'] === 'error') continue;
+            $location = $e['url'];
+            $message  = $e['message'];
             $urls = array_unique(array_merge(
                 extract_urls($location),
                 extract_urls(html_entity_decode($message, ENT_QUOTES | ENT_HTML5, 'UTF-8'))
@@ -90,11 +137,12 @@ if (!function_exists('update_summary_cache')) {
         }
         // Fetch and cache new summaries
         $new_summaries = false;
+        $host_failures = [];
         foreach (array_keys($all_urls) as $url) {
             if (!isset($summary_cache[$url])) {
                 $censored_url = preg_replace('#^https?://#', '', $url);
                 $censored_url = str_replace('.', '[dot]', $censored_url);
-                $summary = fetch_summary($url);
+                $summary = fetch_summary($url, $host_failures);
                 $summary_cache[$url] = [
                     'censored' => $censored_url,
                     'summary' => 'summary: ' . $summary
